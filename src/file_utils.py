@@ -3,7 +3,7 @@ import os
 import logging
 from typing import Set, List, Optional
 
-from summary_error import SummarizationError
+from src.summary_error import SummarizationError
 
 logging.basicConfig(
     level=logging.INFO,
