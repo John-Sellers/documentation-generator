@@ -1,19 +1,26 @@
 {
-    "name": "Python Documentation Generator",
+    "name": "Documentation Generator",
     "build": {
         "dockerfile": "../Dockerfile",
         "context": ".."
     },
-    "workspaceFolder": "/workspaces",
+    "forwardPorts": [
+        5173
+    ],
+    "workspaceFolder": "/workspaces/documentation-generator",
     "remoteEnv": {
         "OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}",
         "GROQ_API_KEY": "${localEnv:GROQ_API_KEY}"
     },
+    "postCreateCommand": "node --version && pnpm --version",
     "customizations": {
         "vscode": {
             "extensions": [
                 "ms-python.python",
-                "ms-python.vscode-pylance"
+                "ms-python.vscode-pylance",
+                "svelte.svelte-vscode",
+                "esbenp.prettier-vscode",
+                "Codeium.codeium"
             ]
         }
     },
