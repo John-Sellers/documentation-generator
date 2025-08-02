@@ -5,3 +5,6 @@ notebook==7.1.3
 jupyterlab==4.1.8
 openai==1.23.6
 tqdm==4.66.4
+modal==1.1.1
+fastapi==0.111.0
+pydantic==2.6.4

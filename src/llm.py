@@ -5,12 +5,12 @@ import textwrap
 import logging
 from typing import Optional, List
 
-from file_utils import (
+from src.file_utils import (
     build_context_from_main,
     find_all_main_files, 
     prompt_user_to_choose,
 )
-from summary_error import SummarizationError
+from src.summary_error import SummarizationError
 
 logging.basicConfig(
     level=logging.INFO,
@@ -96,7 +96,8 @@ def summarize_main_logic(full_code_context: str, retries: int = 3, backoff: int 
                 logger.info(f"✅ Successfully received summary using model: {model_name}")
                 logger.info(f"🔢 Token usage: prompt={prompt_tokens}, completion={completion_tokens}, total={total_tokens}")
 
-                return logger.info(f"🤖 Summary generated using `{model_name}`\n\n{summary}")
+                logger.info(f"🤖 Summary generated using `{model_name}`\n\n{summary}")
+                return summary
 
             except requests.RequestException as e:
                 logger.warning(f"[Attempt {attempt}] API request failed: {e}")
