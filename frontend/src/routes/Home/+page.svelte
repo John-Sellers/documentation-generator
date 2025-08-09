@@ -56,7 +56,7 @@
 			</p>
 
 			<a
-				href="/Submit"
+				href="/submit"
 				class="group inline-flex items-center rounded-xl bg-gradient-to-r from-sky-500 to-indigo-500 px-8 py-4 text-lg font-bold text-white transition-transform hover:from-sky-600 hover:to-indigo-600"
 			>
 				Start Analyzing Now

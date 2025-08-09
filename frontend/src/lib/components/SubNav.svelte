@@ -1,7 +1,7 @@
 <script>
 	const tabs = [
-		{ name: 'Submit', href: '/Submit' },
-		{ name: 'History', href: '/History' }
+		{ name: 'Submit', href: '/submit' },
+		{ name: 'History', href: '/history' }
 	];
 </script>
 

@@ -107,7 +107,7 @@
 	<div class="flex min-h-screen items-center justify-center p-6">
 		<div class="rounded-2xl border border-white/20 bg-white/10 p-6 text-center text-white">
 			<p class="mb-4">You must be signed in to view history</p>
-			<a href="/Home" class="rounded bg-white/20 px-4 py-2 hover:bg-white/30">Go Home</a>
+			<a href="/home" class="rounded bg-white/20 px-4 py-2 hover:bg-white/30">Go Home</a>
 		</div>
 	</div>
 {:else}
@@ -157,7 +157,7 @@
 					<h3 class="mb-2 text-2xl font-semibold text-white">No submissions yet</h3>
 					<p class="mb-6 text-white/60">Start by submitting your first code analysis</p>
 					<a
-						href="/Submit"
+						href="/submit"
 						class="inline-flex items-center gap-2 rounded bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 text-white hover:from-purple-600 hover:to-pink-600"
 					>
 						Submit Code Now
