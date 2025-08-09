@@ -1,37 +1,64 @@
+<!-- src/routes/+layout.svelte -->
 <script lang="ts">
+	// Core SvelteKit helpers
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
+	import { invalidate, goto } from '$app/navigation';
+
+	// Project styles
 	import '../app.css';
 
-	// Icons for the top navigation
-	import { Code2, FileText, Home as HomeIcon, BookOpen, HelpCircle } from '@lucide/svelte';
+	// Lucide icons as direct component imports
+	import Code2 from '@lucide/svelte/icons/code-2';
+	import FileText from '@lucide/svelte/icons/file-text';
+	import HomeIcon from '@lucide/svelte/icons/home';
+	import BookOpen from '@lucide/svelte/icons/book-open';
+	import HelpCircle from '@lucide/svelte/icons/help-circle';
 
-	// Your tiny building blocks from Step 1
-	import UserMenu from '$lib/components/UserMenu.svelte';
-	import SubNav from '$lib/components/SubNav.svelte';
-	import { User } from '$lib/api/User';
+	// Your sub navigation
+	import SubNav from '../lib/components/SubNav.svelte';
 
-	// Simple state
-	let user: { id: number; name: string } | null = null;
-	let isLoading = true;
+	// Types
+	import type { Session } from '@supabase/supabase-js';
 
-	// Check who is logged in
-	async function checkUser() {
+	// Data from +layout.server.ts and +layout.ts
+	// supabase is the browser client and session is null when logged out
+	export let data: { supabase: any; session: Session | null };
+
+	// Keep locals in sync if data changes
+	let { supabase, session } = data;
+	$: ({ supabase, session } = data);
+
+	// Convenience values from the $page store
+	$: pathname = $page.url.pathname;
+
+	onMount(() => {
+		const {
+			data: { subscription }
+		} = supabase.auth.onAuthStateChange((_event: string, newSession: Session) => {
+			// Compare the "expires_at" we’re currently rendering with what Supabase just told us
+			const oldExp = data.session?.expires_at ?? null;
+			const newExp = newSession?.expires_at ?? null;
+
+			if (oldExp !== newExp) {
+				// Triggers +layout.ts to re-run and return the fresh session
+				invalidate('supabase:auth');
+			}
+		});
+
+		return () => subscription.unsubscribe();
+	});
+
+	// Simple logout that clears the session and moves to Login
+	async function handleLogout() {
 		try {
-			user = await User.me();
-		} catch {
-			user = null;
-		} finally {
-			isLoading = false;
+			await supabase.auth.signOut();
+			await goto('/login');
+			// The listener above will refresh session data and the UI will update
+		} catch (e) {
+			console.error('Logout failed', e);
 		}
 	}
-
-	// Run once when the page loads
-	onMount(checkUser);
-
-	// Recompute on route change
-	$: pathname = $page.url.pathname;
-	$: isWorkspacePage = pathname === '/submit' || pathname === '/history';
 </script>
 
 <!-- Pretty gradient background -->
@@ -68,13 +95,13 @@
 					</div>
 				</a>
 
-				<!-- Links and user menu -->
+				<!-- Links and auth actions -->
 				<div class="hidden items-center gap-4 md:flex">
 					<div class="flex items-center gap-2">
 						<a href="/home">
 							<div
 								class={'flex items-center gap-2 rounded-full border border-transparent bg-white/5 px-4 py-2 text-white/80 backdrop-blur-sm transition-colors hover:bg-white/20 hover:text-white ' +
-									($page.url.pathname === '/home' ? 'border-white/20 bg-white/20 text-white' : '')}
+									(pathname === '/home' ? 'border-white/20 bg-white/20 text-white' : '')}
 							>
 								<HomeIcon class="h-4 w-4" />
 								<span class="text-sm font-medium">Home</span>
@@ -84,9 +111,7 @@
 						<a href="/documentation">
 							<div
 								class={'flex items-center gap-2 rounded-full border border-transparent bg-white/5 px-4 py-2 text-white/80 backdrop-blur-sm transition-colors hover:bg-white/20 hover:text-white ' +
-									($page.url.pathname === '/documentation'
-										? 'border-white/20 bg-white/20 text-white'
-										: '')}
+									(pathname === '/documentation' ? 'border-white/20 bg-white/20 text-white' : '')}
 							>
 								<BookOpen class="h-4 w-4" />
 								<span class="text-sm font-medium">Documentation</span>
@@ -96,7 +121,7 @@
 						<a href="/help">
 							<div
 								class={'flex items-center gap-2 rounded-full border border-transparent bg-white/5 px-4 py-2 text-white/80 backdrop-blur-sm transition-colors hover:bg-white/20 hover:text-white ' +
-									($page.url.pathname === '/help' ? 'border-white/20 bg-white/20 text-white' : '')}
+									(pathname === '/help' ? 'border-white/20 bg-white/20 text-white' : '')}
 							>
 								<HelpCircle class="h-4 w-4" />
 								<span class="text-sm font-medium">Help</span>
@@ -104,19 +129,48 @@
 						</a>
 					</div>
 
-					<UserMenu />
+					<!-- Right side auth action. Login when logged out. Logout when logged in. -->
+					{#if data.session}
+						<button
+							class="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm text-white/90 hover:bg-white/20"
+							on:click={handleLogout}
+						>
+							Logout
+						</button>
+					{:else}
+						<a
+							href="/login"
+							class="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm text-white/90 hover:bg-white/20"
+						>
+							Login/Signup
+						</a>
+					{/if}
 				</div>
 
-				<!-- Mobile user menu -->
+				<!-- Mobile auth action -->
 				<div class="md:hidden">
-					<UserMenu />
+					{#if data.session}
+						<button
+							class="rounded border border-white/20 bg-white/10 px-3 py-1 text-sm text-white/90"
+							on:click={handleLogout}
+						>
+							Logout
+						</button>
+					{:else}
+						<a
+							href="/login"
+							class="rounded border border-white/20 bg-white/10 px-3 py-1 text-sm text-white/90"
+						>
+							Login
+						</a>
+					{/if}
 				</div>
 			</div>
 		</div>
 	</nav>
 
-	<!-- Sub navigation only for workspace pages and only if logged in -->
-	{#if !isLoading && user && isWorkspacePage}
+	<!-- Sub navigation. Show on every page when signed in. -->
+	{#if data.session}
 		<SubNav />
 	{/if}
 
