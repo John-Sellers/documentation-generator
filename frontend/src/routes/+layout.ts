@@ -1,4 +1,3 @@
-// src/routes/+layout.ts
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 import { createBrowserClient } from '@supabase/ssr';
 import { browser } from '$app/environment';

@@ -760,12 +760,12 @@ async def summarize(request: Request):
         raise HTTPException(status_code=400, detail="Invalid JSON")
 
     try:
-        sb = SummarizeBody(**body)
+        summarize_body = SummarizeBody(**body)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Bad request: {e}")
 
     # 4) Locate the prepared working folder using the source_id.
-    work_root = os.path.join("/data", sb.source_id)
+    work_root = os.path.join("/data", summarize_body.source_id)
     manifest_path = os.path.join(work_root, "manifest.json")
     if not os.path.isfile(manifest_path):
         # This happens if: wrong id, expired/cleaned-up folder, or /prepare never committed.
@@ -779,19 +779,21 @@ async def summarize(request: Request):
         raise HTTPException(status_code=400, detail="prepared source is missing")
 
     # 6) Read and join the selected files into one big text bundle with clear per-file headers.
-    bundle = read_selected_bundle(root, sb.selected_paths)
+    bundle = read_selected_bundle(root, summarize_body.selected_paths)
 
     # 7) Call Groq to generate the sections as strict JSON.
-    sections_json = _call_llm_sections(bundle, sb.sections, sb.constraints)
+    sections_json = _call_llm_sections(
+        bundle, summarize_body.sections, summarize_body.constraints
+    )
 
     # 8) If requested, delete the folder and commit the deletion so future calls won't find it.
-    if sb.cleanup:
+    if summarize_body.cleanup:
         shutil.rmtree(work_root, ignore_errors=True)
         volume.commit()  # make the deletion visible to other functions / later calls
 
     # 9) Return the shaped result.
     return {
-        "source_id": sb.source_id,
+        "source_id": summarize_body.source_id,
         "sections": sections_json,
         "meta": {"warnings": [], "truncated": False},
     }

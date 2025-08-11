@@ -1,5 +1,3 @@
-<!-- src/routes/login/+page.svelte -->
-
 <script lang="ts">
 	// We will use SvelteKit navigation to move to /submit after success
 	import { goto } from '$app/navigation';

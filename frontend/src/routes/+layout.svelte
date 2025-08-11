@@ -1,4 +1,3 @@
-<!-- src/routes/+layout.svelte -->
 <script lang="ts">
 	// Core SvelteKit helpers
 	import { onMount } from 'svelte';
