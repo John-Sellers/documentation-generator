@@ -163,7 +163,7 @@
 	<div class="flex min-h-screen items-center justify-center p-6">
 		<div class="rounded-2xl border border-white/20 bg-white/10 p-6 text-center text-white">
 			<p class="mb-4">You must be signed in to submit</p>
-			<a href="/home" class="rounded bg-white/20 px-4 py-2 hover:bg-white/30">Go Home</a>
+			<a href="/" class="rounded bg-white/20 px-4 py-2 hover:bg-white/30">Go Home</a>
 		</div>
 	</div>
 {:else if submission && submission.status === 'processing'}

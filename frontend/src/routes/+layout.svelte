@@ -82,7 +82,7 @@
 		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 			<div class="flex h-16 items-center justify-between">
 				<!-- App logo and name -->
-				<a href="/home" class="group flex items-center gap-3">
+				<a href="/" class="group flex items-center gap-3">
 					<div
 						class="flex h-10 w-10 items-center justify-center rounded-xl border border-white/30 bg-white/20 bg-gradient-to-r from-sky-500 to-indigo-500 backdrop-blur-sm transition-transform group-hover:scale-105"
 					>
@@ -97,10 +97,10 @@
 				<!-- Links and auth actions -->
 				<div class="hidden items-center gap-4 md:flex">
 					<div class="flex items-center gap-2">
-						<a href="/home">
+						<a href="/">
 							<div
 								class={'flex items-center gap-2 rounded-full border border-transparent bg-white/5 px-4 py-2 text-white/80 backdrop-blur-sm transition-colors hover:bg-white/20 hover:text-white ' +
-									(pathname === '/home' ? 'border-white/20 bg-white/20 text-white' : '')}
+									(pathname === '/' ? 'border-white/20 bg-white/20 text-white' : '')}
 							>
 								<HomeIcon class="h-4 w-4" />
 								<span class="text-sm font-medium">Home</span>
