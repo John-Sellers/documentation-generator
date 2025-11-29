@@ -1,52 +1,3 @@
-"""
-Pure Modal web endpoints.
-
-This module exposes two HTTPS endpoints, both created via @modal.fastapi_endpoint:
-
-1) POST /prepare
-   - Accepts EITHER:
-       a) JSON (application/json) describing the source (Git repo, zip URL, pasted text), OR
-       b) multipart/form-data with a *local .zip upload* from the user's device.
-   - It "materializes" the source into a *per-request working folder* inside a Modal Volume
-     mounted at /data. (Each request gets a unique folder key called "source_id".)
-   - It then walks the chosen root folder, applies include/exclude glob filters and size caps,
-     and returns a *file index* with tiny previews so the UI can let the user pick exactly
-     which files to summarize (language-agnostic).
-   - Returns JSON: { "source_id": "<short id>", "files": [ { "path": "...", "size": 123, "preview": "..." }, ... ] }
-   - **Important:** At the end of /prepare we call `volume.commit()` so that subsequent functions
-     (such as /summarize) see the written files and the saved manifest.
-
-2) POST /summarize
-   - Accepts JSON:
-       {
-         "source_id": "<id from /prepare>",
-         "selected_paths": ["relative/path/1", "relative/path/2", ...],
-         "sections": [ ... SectionSpec objects ... ],
-         "constraints": { "audience": "...", "tone": "...", "reading_level": "...", "max_tokens": 1800 },
-         "cleanup": true
-       }
-   - It first calls `volume.reload()` to make sure we see the latest committed state from /prepare.
-   - It loads /data/<source_id>/manifest.json to learn the *actual root folder* to read from.
-   - It concatenates the selected files into one text bundle, then calls Groq (OpenAI-compatible API)
-     asking for **strict JSON** whose keys *exactly* match the requested section "id"s.
-   - Returns JSON: { "source_id": "...", "sections": { "<id>": <value>, ... }, "meta": { "warnings": [], "truncated": false } }
-   - If "cleanup": true, it deletes the working folder and then calls `volume.commit()` again so the deletion is visible.
-
-Authentication:
-- Both endpoints require the HTTP header:  Authorization: Bearer <SECRET_TOKEN>
-- SECRET_TOKEN is provided to the container by a Modal Secret named "secret-token".
-
-Other Secrets:
-- "groq-api-key" provides GROQ_API_KEY used to call Groq's API.
-- (Optional) If you want private GitHub clones, create a secret holding GITHUB_TOKEN
-  (e.g., named "github-token") and make sure clone_repo() can see it via env.
-  NOTE: This file does not explicitly declare that secret; clone_repo reads os.getenv("GITHUB_TOKEN").
-        For private repos, ensure  Modal function has that env set (via Secret or env injection).
-
-Deployment:
-  modal deploy backend/summarizer_modal.py
-"""
-
 # ------------------------------
 # Standard library dependencies
 # ------------------------------
@@ -797,3 +748,53 @@ async def summarize(request: Request):
         "sections": sections_json,
         "meta": {"warnings": [], "truncated": False},
     }
+
+
+"""
+Pure Modal web endpoints.
+
+This module exposes two HTTPS endpoints, both created via @modal.fastapi_endpoint:
+
+1) POST /prepare
+   - Accepts EITHER:
+       a) JSON (application/json) describing the source (Git repo, zip URL, pasted text), OR
+       b) multipart/form-data with a *local .zip upload* from the user's device.
+   - It "materializes" the source into a *per-request working folder* inside a Modal Volume
+     mounted at /data. (Each request gets a unique folder key called "source_id".)
+   - It then walks the chosen root folder, applies include/exclude glob filters and size caps,
+     and returns a *file index* with tiny previews so the UI can let the user pick exactly
+     which files to summarize (language-agnostic).
+   - Returns JSON: { "source_id": "<short id>", "files": [ { "path": "...", "size": 123, "preview": "..." }, ... ] }
+   - **Important:** At the end of /prepare we call `volume.commit()` so that subsequent functions
+     (such as /summarize) see the written files and the saved manifest.
+
+2) POST /summarize
+   - Accepts JSON:
+       {
+         "source_id": "<id from /prepare>",
+         "selected_paths": ["relative/path/1", "relative/path/2", ...],
+         "sections": [ ... SectionSpec objects ... ],
+         "constraints": { "audience": "...", "tone": "...", "reading_level": "...", "max_tokens": 1800 },
+         "cleanup": true
+       }
+   - It first calls `volume.reload()` to make sure we see the latest committed state from /prepare.
+   - It loads /data/<source_id>/manifest.json to learn the *actual root folder* to read from.
+   - It concatenates the selected files into one text bundle, then calls Groq (OpenAI-compatible API)
+     asking for **strict JSON** whose keys *exactly* match the requested section "id"s.
+   - Returns JSON: { "source_id": "...", "sections": { "<id>": <value>, ... }, "meta": { "warnings": [], "truncated": false } }
+   - If "cleanup": true, it deletes the working folder and then calls `volume.commit()` again so the deletion is visible.
+
+Authentication:
+- Both endpoints require the HTTP header:  Authorization: Bearer <SECRET_TOKEN>
+- SECRET_TOKEN is provided to the container by a Modal Secret named "secret-token".
+
+Other Secrets:
+- "groq-api-key" provides GROQ_API_KEY used to call Groq's API.
+- (Optional) If you want private GitHub clones, create a secret holding GITHUB_TOKEN
+  (e.g., named "github-token") and make sure clone_repo() can see it via env.
+  NOTE: This file does not explicitly declare that secret; clone_repo reads os.getenv("GITHUB_TOKEN").
+        For private repos, ensure  Modal function has that env set (via Secret or env injection).
+
+Deployment:
+  modal deploy backend/summarizer_modal.py
+"""
