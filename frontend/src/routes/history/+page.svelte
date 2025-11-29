@@ -216,6 +216,7 @@
 
 			<!-- Modal -->
 			{#if selectedSubmission}
+				<!-- Backdrop -->
 				<div
 					class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
 					role="button"
@@ -242,7 +243,7 @@
 						aria-labelledby="analysis-dialog-title"
 						aria-describedby="analysis-dialog-desc"
 						tabindex="-1"
-						on:click|stopPropagation
+						on:pointerdown|stopPropagation
 						in:scale={{ duration: 120, start: 0.95 }}
 						out:scale={{ duration: 120, start: 0.95 }}
 					>
@@ -265,17 +266,17 @@
 						<div id="analysis-dialog-desc" class="space-y-6 p-6 text-white">
 							<div class="grid grid-cols-2 gap-4">
 								<div>
-									<label class="text-sm text-white/60">Method</label>
+									<p class="text-sm text-white/60">Method</p>
 									<p class="font-medium">{formatInputType(selectedSubmission.input_type)}</p>
 								</div>
 								<div>
-									<label class="text-sm text-white/60">Status</label>
+									<p class="text-sm text-white/60">Status</p>
 									<p class="capitalize">{selectedSubmission.status}</p>
 								</div>
 							</div>
 
 							<div>
-								<label class="text-sm text-white/60">Input Content</label>
+								<p class="text-sm text-white/60">Input Content</p>
 								<div class="mt-2 rounded-lg border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
 									<p class="break-all font-mono text-sm text-white/80">
 										{selectedSubmission.input_content.length > 200
@@ -287,7 +288,7 @@
 
 							{#if selectedSubmission.summary}
 								<div>
-									<label class="text-sm text-white/60">Business Summary</label>
+									<p class="text-sm text-white/60">Business Summary</p>
 									<div
 										class="mt-2 rounded-lg border border-white/10 bg-white/5 p-4 backdrop-blur-sm"
 									>
@@ -298,7 +299,7 @@
 
 							{#if selectedSubmission.error_message}
 								<div>
-									<label class="text-sm text-red-400">Error Message</label>
+									<p class="text-sm text-red-400">Error Message</p>
 									<div
 										class="mt-2 rounded-lg border border-red-300/20 bg-red-500/10 p-4 backdrop-blur-sm"
 									>
@@ -309,19 +310,21 @@
 
 							<div class="grid grid-cols-2 gap-4">
 								<div>
-									<label class="text-sm text-white/60">Submitted</label>
+									<p class="text-sm text-white/60">Submitted</p>
 									<p class="text-sm text-white/80">{fmt(selectedSubmission.created_date)}</p>
 								</div>
 								{#if selectedSubmission.input_type === 'github_repo' || selectedSubmission.input_type === 'github_repo_directory'}
 									<div>
-										<label class="text-sm text-white/60">Open</label>
+										<p class="text-sm text-white/60">Open</p>
 										<p class="inline-flex items-center gap-1 text-sm text-white/80">
 											<a
 												class="underline hover:no-underline"
 												href={selectedSubmission.input_content}
 												target="_blank"
-												rel="noreferrer">Source</a
+												rel="noreferrer"
 											>
+												Source
+											</a>
 											<ExternalLink class="h-3 w-3" />
 										</p>
 									</div>

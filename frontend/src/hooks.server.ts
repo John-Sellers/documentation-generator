@@ -1,76 +1,72 @@
-// src/hooks.server.ts
-
-// [1] Import public environment variables. These are read from your .env at startup.
+// [1] Pull in your public Supabase settings from the environment.
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 
-// [2] Import the Supabase SSR helper that creates a server aware client.
+// [2] Bring in the Supabase SSR helper that knows how to work with cookies.
 import { createServerClient } from '@supabase/ssr';
 
-// [3] Import SvelteKit types and helpers.
+// [3] Bring SvelteKit types and helpers that we will use.
 import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { redirect } from '@sveltejs/kit';
 
-// [4] First handle. Its job is to attach a Supabase client and a helper to locals.
+// [4] This first handle sets up Supabase on every request.
 const supabaseHandle: Handle = async ({ event, resolve }) => {
-    // [5] Build a Supabase client that knows how to read and write cookies on this request.
+    // [5] Make a Supabase client that can read and write cookies for this request.
     event.locals.supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
         cookies: {
-            // [6] When Supabase needs to read cookies, we give it all cookies from the request.
+            // [6] When Supabase asks for cookies, give it the cookies from the request.
             getAll: () => event.cookies.getAll(),
-            // [7] When Supabase needs to set or update cookies, we write them to the response.
+            // [7] When Supabase wants to set cookies, write them onto the response.
             setAll: (cookies) => {
                 cookies.forEach(({ name, value, options }) => {
-                    // [8] Ensure every cookie has a path. Without a path, some clients will not send it back.
+                    // [8] Always force a path so the browser sends the cookie back to us.
                     event.cookies.set(name, value, { ...options, path: '/' });
                 });
             }
         }
     });
 
-    // [9] Add a helper to locals that returns a validated session and user.
-    //     Validated means we ask Supabase to parse and verify the token from the cookie.
+    // [9] Add a helper that returns a validated user and an optional session token bundle.
+    //     Validated means Supabase checks the cookie and confirms it with the auth server.
     event.locals.safeGetSession = async () => {
-        // [10] First, ask Supabase for the user. This checks the token in the cookie.
+        // [10] Ask Supabase for the user. This call verifies the cookie with the auth server.
         const { data: userData, error: userError } = await event.locals.supabase.auth.getUser();
 
-        // [11] If there is an error, there is no valid token. Return nulls.
+        // [11] If there is any error or no user, return user null and session null.
         if (userError || !userData.user) {
-            return { session: null, user: null };
+            return { user: null, session: null };
         }
 
-        // [12] There is a valid user. Now fetch the full session object.
+        // [12] If you need tokens or expiry times, you can still read the session object.
+        //      We will not use session.user anywhere. We only use session for tokens.
         const { data: sessionData } = await event.locals.supabase.auth.getSession();
 
-        // [13] Return both so server code can rely on them.
-        return { session: sessionData.session, user: userData.user };
+        // [13] Return the verified user and the session bundle. Never trust session.user.
+        return { user: userData.user, session: sessionData.session ?? null };
     };
 
-    // [14] Continue to the rest of the app. Also filter which headers are exposed to the browser.
-    //      This avoids leaking internal headers that are only useful server side.
+    // [14] Continue with the request and keep only a few headers visible to the client.
     return resolve(event, {
         filterSerializedResponseHeaders: (name) =>
             name === 'content-range' || name === 'x-supabase-api-version'
     });
 };
 
-// [15] Second handle. A simple guard for protected routes.
-//      If the user is not logged in, block access to certain paths.
-//      If the user is logged in, do not show the login page.
+// [15] This second handle protects routes. It checks the verified user only.
 const guardHandle: Handle = async ({ event, resolve }) => {
-    // [16] Read the current session once for this request.
-    const { session } = await event.locals.safeGetSession();
+    // [16] Ask our helper for the verified user and optional session.
+    const { user } = await event.locals.safeGetSession();
 
-    // [17] The path the user is trying to visit.
+    // [17] Grab the path the person is visiting.
     const path = event.url.pathname;
 
-    // [18] If not logged in and trying to reach protected pages, send to login.
-    if (!session && (path === '/submit' || path === '/history')) {
+    // [18] If there is no user and the path needs auth, send them to login.
+    if (!user && (path === '/submit' || path === '/history')) {
         throw redirect(303, '/login');
     }
 
-    // [19] If already logged in and trying to view the login page, send to home.
-    if (session && path === '/login') {
+    // [19] If there is a user and they try to visit the login page, send them home.
+    if (user && path === '/login') {
         throw redirect(303, '/');
     }
 
@@ -78,6 +74,5 @@ const guardHandle: Handle = async ({ event, resolve }) => {
     return resolve(event);
 };
 
-// [21] Export a single handle that runs our two pieces in order.
-//      First we attach Supabase, then we run the guard.
+// [21] Export the combined handle. First we set up Supabase. Then we guard paths.
 export const handle: Handle = sequence(supabaseHandle, guardHandle);
