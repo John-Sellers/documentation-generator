@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 # ------------------------------
 # NOTE: We import from  sibling module `source_utils.py` which holds small, testable helpers.
 #       Those helpers are language-agnostic and do not assume a Python-only project.
-from source_utils import (
+from backend.test_for_new_logic import (
     clone_repo,  # Shallow clone a Git repo; uses GITHUB_TOKEN if present.
     download_and_extract_zip,  # Download a .zip by URL and extract it.
     extract_zip_file,  # Extract a local .zip (used for direct multipart uploads).
